@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Subscription Information</title>
+    <style>
+              header{
+	background-color: #f0f3f9;
+	position: fixed;
+	width: 100%;
+	right: 0;
+    top: 0;
+	
+
+	
+
+	padding: 10px ;
+	z-index: 1000;
+	transition: all .35s ease;
+}
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .center-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+
+        .logo {
+            height: 50px;
+            margin-right: 10px;
+        }
+
+        h1 {
+            margin-top: 10;
+            margin-left: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        h3 {
+           
+             margin-left: 10%;
+            font-weight: bold;
+        }
+        p{
+            margin-left: 10%;
+            margin-top: 2%;
+        }
+        .container{
+       
+        margin: 0 9%;
+        padding: 70px 80px;
+	    box-shadow: 0px 5px 40px rgb(19 8 73 / 13%);
+	    border-radius: 20px;
+        display: flex; /* Use flexbox */
+            flex-direction: column; /* Stack elements vertically */
+            align-items: flex-start; /* Align items to the left side */
+}
+        .link-input {
+            margin-bottom: 10px;
+        }
+
+        .copy-button{
+            margin-left: 22%;
+            display: inline-block;
+            width: 120px;
+		background: #0397ff;
+		color: #fff;
+		padding: 12px 25px;
+		border-radius: 5px;
+		border: none;
+		font-size: 15px;
+		font-weight: 700;
+		transition: all .25s ease;
+	cursor: pointer;
+
+        }
+        .copy-button:hover{
+            transform: scale(1.04) translateY(-5px);
+            background-color: #058;
+        }
+        .qr-button{
+            margin-left: 22%;
+            display: inline-block;
+		background: #0397ff;
+        width: 120px;
+		color: #fff;
+		padding: 12px 25px;
+		border-radius: 5px;
+		border: none;
+		font-size: 15px;
+		font-weight: 700;
+		transition: all .25s ease;
+	cursor: pointer;
+        }
+        input[type="text"] {
+            width: 32%; 
+            padding: 8px;
+            margin-left: 10%;
+            font-size: 14px;
+            border: 4px solid #ccc;
+            border-radius: 5px;
+            box-shadow: none;
+        }
+        .qr-button:hover{
+            transform: scale(1.04) translateY(-5px);
+            background-color: #058;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 16px;
+            line-height: 1;
+            
+        }
+
+        .active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .limited {
+            background-color: #F44336;
+            color: white;
+        }
+
+        .expired {
+            background-color: #FF9800;
+            color: white;
+        }
+
+        .disabled {
+            background-color: #9E9E9E;
+            color: white;
+        }
+
+        .qr-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 10px 25px 25px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 9999;
+        }
+
+        .qr-close-button {
+            text-align: right;
+            margin-bottom: 5px;
+            margin-right: -15px;
+        }    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <header>
+		<div class="center-container">
+            <a href="http://rshost.deviitor.com" target="_blank">
+            <img class="logo" src=https://servers.deviitor.com/assets/img/logo.png alt="Logo"></a>
+            <h1>VPN Data Usage Portal</h1>
+        </div>
+        
+    </header>
+</head>
+
+<body>
+    <br><br> <br><br><br>
+    <center>
+        <h2>Welcome: #{{ user.username[:3] + " - " + user.username[3:] }}</h2>
+        <br>
+    </center>
+    <div class="container">
+        <p><b>Status: </b><span
+                class="status {% if user.status.value == 'active' %}active{% elif user.status.value == 'limited' %}limited{% elif user.status.value == 'expired' %}expired{% elif user.status.value == 'disabled' %}disabled{% endif %}">{{
+                user.status.value }}</span></p>
+        <p><b>Data Limit: </b>{% if not user.data_limit %}8{% else %}{{ user.data_limit | bytesformat }}{% endif %}</p>
+        <p><b>Data Used: </b>{{ user.used_traffic | bytesformat }}{% if user.data_limit_reset_strategy != 'no_reset' %} (resets
+            every {{ user.data_limit_reset_strategy.value }}){% endif %}</p>
+        <p><b>Expiration Date:</b>
+            {% if not user.expire %}
+            8
+            {% else %}
+            {% set current_timestamp = now().timestamp() %}
+            {% set remaining_days = ((user.expire - current_timestamp) // (24 * 3600)) %}
+            {{ user.expire | datetime }} ({{ remaining_days | int }} days remaining)
+            {% endif %}
+        </p>
+
+        {% if user.status == 'active' %}
+
+        
+            <h3>Links:</h3>
+            
+                {% for link in user.links %}
+                
+                    <input type="text" value="{{ link }}" readonly><br><br>
+                    <br><button class="copy-button" onclick="copyLink('{{ link }}', this)">Copy</button>
+                    <br><button class="qr-button" data-link="{{ link }}">QR Code</button>
+                
+                {% endfor %}
+            
+        </div>
+
+        <div class="qr-popup" id="qrPopup">
+            <div class="qr-close-button">
+                <button onclick="closeQrPopup()">X</button>
+            </div>
+            <div id="qrCodeContainer"></div>
+        </div>
+
+        {% endif %}
+    </div>
+    <script>
+        function copyLink(link, button) {
+            const tempInput = document.createElement('input');
+            tempInput.setAttribute('value', link);
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            button.textContent = 'Copied!';
+            setTimeout(function () {
+                button.textContent = 'Copy';
+            }, 1500);
+        }
+
+        const qrButtons = document.querySelectorAll('.qr-button');
+        const qrPopup = document.getElementById('qrPopup');
+
+        qrButtons.forEach((qrButton) => {
+            qrButton.addEventListener('click', () => {
+                const link = qrButton.dataset.link;
+                while (qrCodeContainer.firstChild) {
+                    qrCodeContainer.removeChild(qrCodeContainer.firstChild);
+                }
+                const qrCode = new QRCode(qrCodeContainer, {
+                    text: link,
+                    width: 256,
+                    height: 256
+                });
+                qrPopup.style.display = 'block';
+            });
+        });
+        function closeQrPopup() {
+            document.getElementById('qrPopup').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>
